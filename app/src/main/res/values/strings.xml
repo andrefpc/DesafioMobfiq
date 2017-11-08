@@ -3,4 +3,5 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_home">Home</string>
     <string name="title_categories">Categories</string>
+    <string name="hint_busca">Busca</string>
 </resources>

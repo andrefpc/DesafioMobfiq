@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.andrefpc.desafiomobfiq.model.HttpBody;
@@ -34,12 +35,20 @@ public class ServicoRestFul {
         }
     }
 
-    public static void loadingProducts(Context context, RestClient.OnPostExecuteListener postExecuteListener) {
+    public static void loadingProducts(String search, Context context, RestClient.OnPostExecuteListener postExecuteListener) {
         String url = "https://desafio.mobfiq.com.br/Search/Criteria";
         ProgressDialog dialog = generateDialog("Carregando produtos...", context);
-        RestClient client = new RestClient(context, postExecuteListener, null, url, RestClient.RequestMethod.POST);
-        HttpBody httpBody = new HttpBody("" , 0, 10);
+        RestClient client = new RestClient(context, postExecuteListener, dialog, url, RestClient.RequestMethod.POST);
+        HttpBody httpBody = new HttpBody(search , 0, 10);
         client.addBody(new Gson().toJson(httpBody));
+
+        execute(context, client);
+    }
+
+    public static void loadingCategories(Context context, RestClient.OnPostExecuteListener postExecuteListener) {
+        String url = "http://api-homolog-polishopv2.mobfiq.com.br//StorePreference/CategoryTree";
+        ProgressDialog dialog = generateDialog("Carregando categorias...", context);
+        RestClient client = new RestClient(context, postExecuteListener, dialog, url, RestClient.RequestMethod.GET);
 
         execute(context, client);
     }
