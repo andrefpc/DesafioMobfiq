@@ -2,6 +2,7 @@
     <string name="app_name">Desafio Mobfiq</string>
     <string name="title_activity_main">Desafio Mobfiq</string>
     <string name="title_home">Home</string>
-    <string name="title_categories">Categories</string>
+    <string name="title_more">Mais Produtos</string>
+    <string name="title_categories">Categorias</string>
     <string name="hint_busca">Busca</string>
 </resources>

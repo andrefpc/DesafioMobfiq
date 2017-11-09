@@ -33,9 +33,37 @@
                 android:id="@+id/search_button"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_margin="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:background="#fff"
-                android:src="@android:drawable/ic_menu_search"/>
+                android:src="@drawable/ic_search"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/category_identifier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="5dp"
+            android:padding="10dp"
+            android:background="@drawable/item_background">
+            <ImageView
+                android:id="@+id/arrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_categories_black_24dp"/>
+
+            <TextView
+                android:id="@+id/category_selected"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:layout_marginLeft="10dp"
+                android:text="Categoria"/>
         </LinearLayout>
 
         <ScrollView

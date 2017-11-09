@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "829166829414",
+    "firebase_url": "https://desafiomobfiq.firebaseio.com",
+    "project_id": "desafiomobfiq",
+    "storage_bucket": "desafiomobfiq.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829166829414:android:48fa4406b8514351",
+        "android_client_info": {
+          "package_name": "com.andrefpc.desafiomobfiq"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "829166829414-2sbmb3ccimfkdsjrlevkn82ir5almj2t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.andrefpc.desafiomobfiq",
+            "certificate_hash": "872ecd8c557bdd6c14b9b9c3e6fc0687e7b0d0e2"
+          }
+        },
+        {
+          "client_id": "829166829414-sspbc9rjlu1nd03ovu73c7atussjt7um.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAObnlgwS1T-jPbNpurtTnY0X2rpowsGuI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "829166829414-sspbc9rjlu1nd03ovu73c7atussjt7um.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

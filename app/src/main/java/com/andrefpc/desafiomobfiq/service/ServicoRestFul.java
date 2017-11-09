@@ -36,14 +36,14 @@ public class ServicoRestFul {
         }
     }
 
-    public static void loadingProducts(String search, SearchCriteria searchCriteria, Context context, RestClient.OnPostExecuteListener postExecuteListener) {
+    public static void loadingProducts(String search, SearchCriteria searchCriteria, int page, Context context, RestClient.OnPostExecuteListener postExecuteListener) {
         String url = "https://desafio.mobfiq.com.br/Search/Criteria";
         ProgressDialog dialog = generateDialog("Carregando produtos...", context);
         RestClient client = new RestClient(context, postExecuteListener, dialog, url, RestClient.RequestMethod.POST);
 
-        HttpBody httpBody = new HttpBody(search , 1, 10);
+        HttpBody httpBody = new HttpBody(search , page*10, 10);
        if(searchCriteria != null){
-            httpBody = new HttpBody(searchCriteria.getApiQuery(), null, 0, 10);
+            httpBody = new HttpBody(searchCriteria.getApiQuery(), null, page*10, 10);
         }
 
         String body = new Gson().toJson(httpBody);

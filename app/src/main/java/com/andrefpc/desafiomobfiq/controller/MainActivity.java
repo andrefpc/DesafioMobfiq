@@ -52,8 +52,14 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
     private ScrollView layoutCategories;
     private LinearLayout containerCategories;
 
+
+    private LinearLayout categoryIdentifier;
+    private TextView categorySelected;
+
     private static int LOADING_PRODUCTS = 1;
     private static int LOADING_CATEGORIES = 2;
+
+    private int page;
 
     private SearchCriteria searchCriteria;
 
@@ -69,12 +75,23 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
                 case R.id.navigation_home:
                     showProducts();
                     return true;
+                case R.id.navigation_more:
+                    page++;
+                    ServicoRestFul.loadingProducts(search.getText().toString(), searchCriteria, page, context, onPost);
+                    return true;
                 case R.id.navigation_categories:
                     showCategories();
 
                     if(categories == null) {
                         ServicoRestFul.loadingCategories(context, onPost);
                         flag = LOADING_CATEGORIES;
+                    }else{
+                        for (Category category: categories) {
+                            category.setOpen(false);
+                        }
+
+                        containerCategories.removeAllViews();
+                        loadingCategories(categories);
                     }
                     return true;
             }
@@ -95,18 +112,25 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         search = (EditText) findViewById(R.id.search);
         searchButton = (ImageButton) findViewById(R.id.search_button);
         layoutProducts = (LinearLayout) findViewById(R.id.layoutProducts);
+        categoryIdentifier = (LinearLayout) findViewById(R.id.category_identifier);
+        categorySelected = (TextView) findViewById(R.id.category_selected) ;
 
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                searchCriteria = null;
                 String searchText = search.getText().toString();
                 containerProducts.removeAllViews();
-                ServicoRestFul.loadingProducts(searchText, searchCriteria, context, onPost);
+                page = 0;
+                ServicoRestFul.loadingProducts(searchText, null, page, context, onPost);
                 flag = LOADING_PRODUCTS;
+                categoryIdentifier.setVisibility(View.GONE);
             }
         });
 
-        ServicoRestFul.loadingProducts("", searchCriteria, context, onPost);
+
+        page = 0;
+        ServicoRestFul.loadingProducts("", searchCriteria, page, context, onPost);
         flag = LOADING_PRODUCTS;
 
         layoutCategories = (ScrollView) findViewById(R.id.layoutCategories);
@@ -239,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
             final ImageView arrow = (ImageView) categoryView.findViewById(R.id.arrow);
             TextView name = (TextView) categoryView.findViewById(R.id.category_name);
             final LinearLayout containerSubcategories = (LinearLayout) categoryView.findViewById(R.id.container_subcategories);
+            final LinearLayout containerCategory = (LinearLayout) categoryView.findViewById(R.id.container_category);
 
             name.setText(category.getName());
 
@@ -255,31 +280,32 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
                     final ImageView arrowSubcategory = (ImageView) subcategoryView.findViewById(R.id.arrow);
                     TextView nameSubcategory = (TextView) subcategoryView.findViewById(R.id.category_name);
 
+                    arrowSubcategory.setImageResource(R.drawable.ic_search);
+
                     nameSubcategory.setText(subcategory.getName());
 
                     subcategoryView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            if(!category.isOpen()){
-                                arrowSubcategory.setImageResource(R.drawable.ic_arrow_bottom);
-                                subcategory.setOpen(true);
-                            }else{
-                                arrowSubcategory.setImageResource(R.drawable.ic_arrow_right);
-                                subcategory.setOpen(false);
-                            }
 
                             searchCriteria = subcategory.getRedirect().getSearchCriteria();
                             navigation.setSelectedItemId(R.id.navigation_home);
 
                             containerProducts.removeAllViews();
-                            ServicoRestFul.loadingProducts("", searchCriteria, context, onPost);
+                            page = 0;
+                            ServicoRestFul.loadingProducts("", searchCriteria, page, context, onPost);
                             flag = LOADING_PRODUCTS;
+
+                            categorySelected.setText(category.getName() + " > "+ subcategory.getName());
+                            categoryIdentifier.setVisibility(View.VISIBLE);
                         }
                     });
 
                     containerSubcategories.addView(subcategoryView);
 
                 }
+            }else{
+                arrow.setImageResource(R.drawable.ic_search);
             }
 
             categoryView.setOnClickListener(new View.OnClickListener() {
@@ -288,10 +314,12 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
                     if(!category.isOpen()){
                         arrow.setImageResource(R.drawable.ic_arrow_bottom);
                         containerSubcategories.setVisibility(View.VISIBLE);
+                        containerCategory.setBackgroundResource(R.drawable.item_background_selected);
                         category.setOpen(true);
                     }else{
                         arrow.setImageResource(R.drawable.ic_arrow_right);
                         containerSubcategories.setVisibility(View.GONE);
+                        containerCategory.setBackgroundResource(R.drawable.item_background);
                         category.setOpen(false);
                     }
 
@@ -300,8 +328,13 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
                         navigation.setSelectedItemId(R.id.navigation_home);
 
                         containerProducts.removeAllViews();
-                        ServicoRestFul.loadingProducts("", searchCriteria, context, onPost);
+                        page = 0;
+                        ServicoRestFul.loadingProducts("", searchCriteria, page, context, onPost);
                         flag = LOADING_PRODUCTS;
+
+                        categorySelected.setText(category.getName());
+                        categoryIdentifier.setVisibility(View.VISIBLE);
+
                     }
                 }
             });
