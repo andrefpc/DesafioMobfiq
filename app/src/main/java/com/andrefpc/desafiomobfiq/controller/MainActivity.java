@@ -27,6 +27,7 @@ import com.andrefpc.desafiomobfiq.service.RestClient;
 import com.andrefpc.desafiomobfiq.service.ServicoRestFul;
 import com.andrefpc.desafiomobfiq.util.ShowImageTask;
 import com.google.gson.Gson;
+import com.pushwoosh.Pushwoosh;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -104,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Pushwoosh.getInstance().registerForPushNotifications();
 
         navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
