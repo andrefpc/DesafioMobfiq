@@ -32,6 +32,8 @@ public class Category implements Serializable{
     @SerializedName("LinkId")
     private int linkId;
 
+    private boolean open;
+
     public Category() {
     }
 
@@ -126,5 +128,13 @@ public class Category implements Serializable{
 
     public void setLinkId(int linkId) {
         this.linkId = linkId;
+    }
+
+    public boolean isOpen() {
+        return open;
+    }
+
+    public void setOpen(boolean open) {
+        this.open = open;
     }
 }

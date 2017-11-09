@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.andrefpc.desafiomobfiq.model.HttpBody;
+import com.andrefpc.desafiomobfiq.model.SearchCriteria;
 import com.google.gson.Gson;
 
 /**
@@ -35,12 +36,21 @@ public class ServicoRestFul {
         }
     }
 
-    public static void loadingProducts(String search, Context context, RestClient.OnPostExecuteListener postExecuteListener) {
+    public static void loadingProducts(String search, SearchCriteria searchCriteria, Context context, RestClient.OnPostExecuteListener postExecuteListener) {
         String url = "https://desafio.mobfiq.com.br/Search/Criteria";
         ProgressDialog dialog = generateDialog("Carregando produtos...", context);
         RestClient client = new RestClient(context, postExecuteListener, dialog, url, RestClient.RequestMethod.POST);
-        HttpBody httpBody = new HttpBody(search , 0, 10);
-        client.addBody(new Gson().toJson(httpBody));
+
+        HttpBody httpBody = new HttpBody(search , 1, 10);
+       if(searchCriteria != null){
+            httpBody = new HttpBody(searchCriteria.getApiQuery(), null, 0, 10);
+        }
+
+        String body = new Gson().toJson(httpBody);
+
+        Log.i("HTTP_BODY", body);
+
+        client.addBody(body);
 
         execute(context, client);
     }

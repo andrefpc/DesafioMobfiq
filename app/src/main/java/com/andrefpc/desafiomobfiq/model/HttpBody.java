@@ -7,9 +7,17 @@ import java.io.Serializable;
  */
 
 public class HttpBody implements Serializable {
+    private String ApiQuery;
     private String Query;
     private int Offset;
     private int Size;
+
+    public HttpBody(String apiQuery, String query, int offset, int size) {
+        ApiQuery = apiQuery;
+        Query = query;
+        Offset = offset;
+        Size = size;
+    }
 
     public HttpBody(String query, int offset, int size) {
         Query = query;
@@ -17,7 +25,12 @@ public class HttpBody implements Serializable {
         Size = size;
     }
 
-    public HttpBody() {
+    public String getApiQuery() {
+        return ApiQuery;
+    }
+
+    public void setApiQuery(String apiQuery) {
+        ApiQuery = apiQuery;
     }
 
     public String getQuery() {

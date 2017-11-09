@@ -59,14 +59,20 @@
         </ScrollView>
     </LinearLayout>
 
-    <LinearLayout
+    <ScrollView
         android:id="@+id/layoutCategories"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="60dp"
-        android:visibility="gone"
-        android:orientation="vertical">
-    </LinearLayout>
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/containerCategories"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="60dp"
+            android:orientation="vertical">
+        </LinearLayout>
+    </ScrollView>
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"

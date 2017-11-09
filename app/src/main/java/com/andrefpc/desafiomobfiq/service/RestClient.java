@@ -97,6 +97,7 @@ public class RestClient extends AsyncTask<String, String, String> {
                     URL url = createGetURL(urlString, params);
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("Content-Type", "application/json");
                     conn.setRequestMethod("GET");
 
                     response = getRequest();
@@ -107,6 +108,7 @@ public class RestClient extends AsyncTask<String, String, String> {
                     URL url = new URL(urlString);
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("Content-Type", "application/json");
                     conn.setRequestMethod("POST");
 
                     response = postRequest();

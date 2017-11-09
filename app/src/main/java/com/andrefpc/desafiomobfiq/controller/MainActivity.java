@@ -8,19 +8,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.andrefpc.desafiomobfiq.R;
+import com.andrefpc.desafiomobfiq.model.Category;
+import com.andrefpc.desafiomobfiq.model.CategoryTree;
 import com.andrefpc.desafiomobfiq.model.Criteria;
 import com.andrefpc.desafiomobfiq.model.Product;
+import com.andrefpc.desafiomobfiq.model.SearchCriteria;
 import com.andrefpc.desafiomobfiq.service.RestClient;
 import com.andrefpc.desafiomobfiq.service.ServicoRestFul;
 import com.andrefpc.desafiomobfiq.util.ShowImageTask;
@@ -35,12 +37,27 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
     private Context context = this;
     private RestClient.OnPostExecuteListener onPost = this;
 
+    private BottomNavigationView navigation;
+
     private Criteria criteria;
     private List<Product> products;
 
+    private LinearLayout layoutProducts;
     private LinearLayout containerProducts;
     private EditText search;
     private ImageButton searchButton;
+
+    private List<Category> categories;
+
+    private ScrollView layoutCategories;
+    private LinearLayout containerCategories;
+
+    private static int LOADING_PRODUCTS = 1;
+    private static int LOADING_CATEGORIES = 2;
+
+    private SearchCriteria searchCriteria;
+
+    private int flag;
 
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -50,37 +67,50 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
+                    showProducts();
                     return true;
                 case R.id.navigation_categories:
+                    showCategories();
+
+                    if(categories == null) {
+                        ServicoRestFul.loadingCategories(context, onPost);
+                        flag = LOADING_CATEGORIES;
+                    }
                     return true;
             }
             return false;
         }
     };
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         containerProducts = (LinearLayout) findViewById(R.id.containerProducts);
         search = (EditText) findViewById(R.id.search);
         searchButton = (ImageButton) findViewById(R.id.search_button);
+        layoutProducts = (LinearLayout) findViewById(R.id.layoutProducts);
 
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String searchText = search.getText().toString();
                 containerProducts.removeAllViews();
-                ServicoRestFul.loadingProducts(searchText, context, onPost);
+                ServicoRestFul.loadingProducts(searchText, searchCriteria, context, onPost);
+                flag = LOADING_PRODUCTS;
             }
         });
 
-        ServicoRestFul.loadingProducts("", context, onPost);
-        //ServicoRestFul.loadingCategories(context, onPost);
+        ServicoRestFul.loadingProducts("", searchCriteria, context, onPost);
+        flag = LOADING_PRODUCTS;
+
+        layoutCategories = (ScrollView) findViewById(R.id.layoutCategories);
+        containerCategories = (LinearLayout) findViewById(R.id.containerCategories);
     }
 
 
@@ -105,70 +135,20 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
             }
         }*/
 
-        criteria = new Gson().fromJson(result, Criteria.class);
-        products = criteria.getProducts();
+        if(flag == LOADING_PRODUCTS) {
 
-        loadingProducts(products);
+            criteria = new Gson().fromJson(result, Criteria.class);
+            products = criteria.getProducts();
+
+            loadingProducts(products);
+        }else if(flag == LOADING_CATEGORIES){
+            CategoryTree categoryTree = new Gson().fromJson(result, CategoryTree.class);
+            categories = categoryTree.getCategories();
+
+            loadingCategories(categories);
+        }
 
     }
-
-    /*private void loadingProducts(List<Product> products){
-
-        int count = 0;
-        LayoutInflater inflaterLine = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View lineView = inflaterLine.inflate(R.layout.template_line, null);
-        LinearLayout lineContainer = null;
-
-        for (Product product: products) {
-
-            String name = "";
-            String priceStr = "";
-            String imageUrl = "";
-            try {
-                name = product.getName();
-                imageUrl = product.getSkus().get(0).getImages().get(0).getImageUrl();
-                double price = product.getSkus().get(0).getSellers().get(0).getPrice();
-                priceStr = String.valueOf(price);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            LayoutInflater inflaterItem = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View itemView = inflaterItem.inflate(R.layout.template_item, null);
-
-            ImageView productImg = (ImageView) itemView.findViewById(R.id.product_img);
-            ProgressBar progressBar = (ProgressBar) itemView.findViewById(R.id.progress_bar);
-            TextView productName = (TextView) itemView.findViewById(R.id.product_full_name);
-            TextView productPrice = (TextView) itemView.findViewById(R.id.product_price);
-
-            try {
-                if (!imageUrl.equals("")) {
-                    URL url = new URL(imageUrl);
-
-                    ShowImageTask showImageTask = new ShowImageTask(productImg, url, context, progressBar);
-                    showImageTask.execute();
-                }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-
-            productName.setText(name);
-            productPrice.setText(String.valueOf(priceStr));
-
-            if(count == 0){
-                lineContainer = (LinearLayout) lineView.findViewById(R.id.lineContainer);
-                lineContainer.addView(itemView);
-            }else if(count>0 && count % 2 == 0){
-                lineContainer = (LinearLayout) lineView.findViewById(R.id.lineContainer);
-                lineContainer.addView(itemView);
-                containerProducts.addView(lineContainer);
-            }else{
-                lineContainer.addView(itemView);
-            }
-
-            count++;
-        }
-    }*/
 
     private void loadingProducts(List<Product> products){
 
@@ -247,7 +227,97 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
 
             containerProducts.addView(lineContainer);
 
+        }
+    }
+
+    private void loadingCategories(List<Category> categories){
+        for (final Category category: categories) {
+
+            LayoutInflater inflaterCategory = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View categoryView = inflaterCategory.inflate(R.layout.template_category, null);
+
+            final ImageView arrow = (ImageView) categoryView.findViewById(R.id.arrow);
+            TextView name = (TextView) categoryView.findViewById(R.id.category_name);
+            final LinearLayout containerSubcategories = (LinearLayout) categoryView.findViewById(R.id.container_subcategories);
+
+            name.setText(category.getName());
+
+            containerCategories.addView(categoryView);
+
+
+            final List<Category> subCategories = category.getSubCategories();
+            if(subCategories != null && subCategories.size() > 0) {
+                for (final Category subcategory : subCategories) {
+
+                    LayoutInflater inflaterSubcategory = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    View subcategoryView = inflaterSubcategory.inflate(R.layout.template_category, null);
+
+                    final ImageView arrowSubcategory = (ImageView) subcategoryView.findViewById(R.id.arrow);
+                    TextView nameSubcategory = (TextView) subcategoryView.findViewById(R.id.category_name);
+
+                    nameSubcategory.setText(subcategory.getName());
+
+                    subcategoryView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if(!category.isOpen()){
+                                arrowSubcategory.setImageResource(R.drawable.ic_arrow_bottom);
+                                subcategory.setOpen(true);
+                            }else{
+                                arrowSubcategory.setImageResource(R.drawable.ic_arrow_right);
+                                subcategory.setOpen(false);
+                            }
+
+                            searchCriteria = subcategory.getRedirect().getSearchCriteria();
+                            navigation.setSelectedItemId(R.id.navigation_home);
+
+                            containerProducts.removeAllViews();
+                            ServicoRestFul.loadingProducts("", searchCriteria, context, onPost);
+                            flag = LOADING_PRODUCTS;
+                        }
+                    });
+
+                    containerSubcategories.addView(subcategoryView);
+
+                }
+            }
+
+            categoryView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(!category.isOpen()){
+                        arrow.setImageResource(R.drawable.ic_arrow_bottom);
+                        containerSubcategories.setVisibility(View.VISIBLE);
+                        category.setOpen(true);
+                    }else{
+                        arrow.setImageResource(R.drawable.ic_arrow_right);
+                        containerSubcategories.setVisibility(View.GONE);
+                        category.setOpen(false);
+                    }
+
+                    if(subCategories == null || subCategories.size() == 0) {
+                        searchCriteria = category.getRedirect().getSearchCriteria();
+                        navigation.setSelectedItemId(R.id.navigation_home);
+
+                        containerProducts.removeAllViews();
+                        ServicoRestFul.loadingProducts("", searchCriteria, context, onPost);
+                        flag = LOADING_PRODUCTS;
+                    }
+                }
+            });
 
         }
+    }
+
+    private void showProducts(){
+        layoutProducts.setVisibility(View.VISIBLE);
+        layoutCategories.setVisibility(View.GONE);
+
+    }
+
+    private void showCategories(){
+        search.setText("");
+        layoutProducts.setVisibility(View.GONE);
+        layoutCategories.setVisibility(View.VISIBLE);
     }
 }
