@@ -1,11 +1,12 @@
 package com.andrefpc.desafiomobfiq.controller;
 
 import android.content.Context;
+import android.graphics.Paint;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +19,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.andrefpc.desafiomobfiq.R;
+import com.andrefpc.desafiomobfiq.dao.FavoriteDAO;
 import com.andrefpc.desafiomobfiq.model.Category;
 import com.andrefpc.desafiomobfiq.model.CategoryTree;
 import com.andrefpc.desafiomobfiq.model.Criteria;
@@ -144,30 +146,12 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
 
     @Override
     public void onPostExecute(String result) {
-        Log.i("RESULT", result);
-
-        /*CategoryTree categoryTree = new Gson().fromJson(result, CategoryTree.class);
-        List<Category> categories = categoryTree.getCategories();
-        for (Category category: categories) {
-
-            Log.i("CATEGORIES", category.getName());
-
-            List<Category> subCategories = category.getSubCategories();
-            if(subCategories != null) {
-                for (Category subcategory : subCategories) {
-
-                    Log.i("SUBCATEGORIES", subcategory.getName());
-
-                }
-            }
-        }*/
-
         if(flag == LOADING_PRODUCTS) {
 
             criteria = new Gson().fromJson(result, Criteria.class);
             products = criteria.getProducts();
 
-            loadingProducts(products);
+            loadingProductsLine(products);
         }else if(flag == LOADING_CATEGORIES){
             CategoryTree categoryTree = new Gson().fromJson(result, CategoryTree.class);
             categories = categoryTree.getCategories();
@@ -177,83 +161,124 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
 
     }
 
-    private void loadingProducts(List<Product> products){
+    private void loadingProductsLine(List<Product> products){
 
         int size = products.size();
         int lines = (int) size/2;
 
         for (int i = 0; i<lines; i++){
-            Product product1 = products.get(i*2);
-            Product product2 = products.get(i*2+1);
-
-            String name1 = "";
-            String priceStr1 = "";
-            String imageUrl1 = "";
-            try {
-                name1 = product1.getName();
-                imageUrl1 = product1.getSkus().get(0).getImages().get(0).getImageUrl();
-                double price = product1.getSkus().get(0).getSellers().get(0).getPrice();
-                priceStr1 = String.valueOf(price);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            String name2 = "";
-            String priceStr2 = "";
-            String imageUrl2 = "";
-            try {
-                name2 = product2.getName();
-                imageUrl2 = product2.getSkus().get(0).getImages().get(0).getImageUrl();
-                double price = product2.getSkus().get(0).getSellers().get(0).getPrice();
-                priceStr2 = String.valueOf(price);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Product productLeft = products.get(i*2);
+            Product productRight = products.get(i*2+1);
 
             LayoutInflater inflaterLine = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View lineView = inflaterLine.inflate(R.layout.template_line, null);
             LinearLayout lineContainer = (LinearLayout) lineView.findViewById(R.id.lineContainer);
 
-            ImageView productImg1 = (ImageView) lineContainer.findViewById(R.id.product_img1);
-            ProgressBar progressBar1 = (ProgressBar) lineContainer.findViewById(R.id.progress_bar1);
-            TextView productName1 = (TextView) lineContainer.findViewById(R.id.product_full_name1);
-            TextView productPrice1 = (TextView) lineContainer.findViewById(R.id.product_price1);
+            ImageView productImgLeft = (ImageView) lineContainer.findViewById(R.id.product_img1);
+            ProgressBar progressBarLeft = (ProgressBar) lineContainer.findViewById(R.id.progress_bar1);
+            TextView productNameLeft = (TextView) lineContainer.findViewById(R.id.product_full_name1);
+            TextView productListPriceLeft = (TextView) lineContainer.findViewById(R.id.product_listPrice1);
+            TextView productPriceLeft = (TextView) lineContainer.findViewById(R.id.product_price1);
+            TextView productInstallmentLeft = (TextView) lineContainer.findViewById(R.id.product_installment1);
+            TextView productDiscountLeft = (TextView) lineContainer.findViewById(R.id.product_discount1);
+            ImageView productFavoriteLeft = (ImageView) lineContainer.findViewById(R.id.product_favorite1);
 
-            ImageView productImg2 = (ImageView) lineContainer.findViewById(R.id.product_img2);
-            ProgressBar progressBar2 = (ProgressBar) lineContainer.findViewById(R.id.progress_bar2);
-            TextView productName2 = (TextView) lineContainer.findViewById(R.id.product_full_name2);
-            TextView productPrice2 = (TextView) lineContainer.findViewById(R.id.product_price2);
+            loadingProduct(productLeft, productImgLeft, progressBarLeft, productNameLeft, productListPriceLeft, productPriceLeft, productInstallmentLeft, productDiscountLeft, productFavoriteLeft);
 
-            try {
-                if (!imageUrl1.equals("")) {
-                    URL url = new URL(imageUrl1);
+            ImageView productImgRight = (ImageView) lineContainer.findViewById(R.id.product_img2);
+            ProgressBar progressBarRight = (ProgressBar) lineContainer.findViewById(R.id.progress_bar2);
+            TextView productNameRight = (TextView) lineContainer.findViewById(R.id.product_full_name2);
+            TextView productListPriceRight = (TextView) lineContainer.findViewById(R.id.product_listPrice2);
+            TextView productPriceRight = (TextView) lineContainer.findViewById(R.id.product_price2);
+            TextView productInstallmentRight = (TextView) lineContainer.findViewById(R.id.product_installment2);
+            TextView productDiscountRight = (TextView) lineContainer.findViewById(R.id.product_discount2);
+            ImageView productFavoriteRight = (ImageView) lineContainer.findViewById(R.id.product_favorite2);
 
-                    ShowImageTask showImageTask = new ShowImageTask(productImg1, url, context, progressBar1);
-                    showImageTask.execute();
-                }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-
-            productName1.setText(name1);
-            productPrice1.setText(String.valueOf(priceStr1));
-
-            try {
-                if (!imageUrl2.equals("")) {
-                    URL url = new URL(imageUrl2);
-
-                    ShowImageTask showImageTask = new ShowImageTask(productImg2, url, context, progressBar2);
-                    showImageTask.execute();
-                }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-
-            productName2.setText(name2);
-            productPrice2.setText(String.valueOf(priceStr2));
+            loadingProduct(productRight, productImgRight, progressBarRight, productNameRight, productListPriceRight, productPriceRight, productInstallmentRight, productDiscountRight, productFavoriteRight);
 
             containerProducts.addView(lineContainer);
 
+        }
+    }
+
+    private void loadingProduct(Product product, ImageView productImg, ProgressBar progressBar, TextView productName, TextView productListPrice, TextView productPrice, TextView productInstallment, TextView productDiscount, final ImageView productFavorite) {
+
+        FavoriteDAO favoriteDAO = new FavoriteDAO(context);
+
+        String name = "";
+        String priceStr = "";
+        String listPriceStr = "";
+        String installment = "";
+        String imageUrl = "";
+        String discountStr = "";
+        String id = "";
+        try {
+            name = product.getName();
+            imageUrl = product.getSkus().get(0).getImages().get(0).getImageUrl();
+            double price = product.getSkus().get(0).getSellers().get(0).getPrice();
+            double listPrice = product.getSkus().get(0).getSellers().get(0).getListPrice();
+            int count = product.getSkus().get(0).getSellers().get(0).getBestInstallment().getCount();
+            double value = product.getSkus().get(0).getSellers().get(0).getBestInstallment().getValue();
+            if(listPrice>0) {
+                int discount = (int) (((listPrice - price) * 100) / listPrice);
+                discountStr = discount +"%";
+            }else{
+                discountStr = "0%";
+            }
+
+            priceStr = "R$ " + String.format("%.2f", price).replace(".", ",");
+            listPriceStr = "R$ " + String.format("%.2f", listPrice).replace(".", ",");
+            installment = count + "x de R$ " + String.format("%.2f", value).replace(".", ",");
+            id = product.getId();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            if (!imageUrl.equals("")) {
+                URL url = new URL(imageUrl);
+
+                ShowImageTask showImageTask = new ShowImageTask(productImg, url, context, progressBar);
+                showImageTask.execute();
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        productName.setText(name);
+        productListPrice.setText(listPriceStr);
+        productPrice.setText(priceStr);
+        productInstallment.setText(installment);
+        productDiscount.setText(discountStr);
+
+        changeFavoriteIcon(productFavorite, favoriteDAO, id);
+
+        final String finalId = id;
+        productFavorite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                favoriteDAO.saveOrDelete(finalId);
+                changeFavoriteIcon(productFavorite, favoriteDAO, finalId);
+            }
+        });
+
+        productListPrice.setPaintFlags(productListPrice.getPaintFlags() |   Paint.STRIKE_THRU_TEXT_FLAG);
+    }
+
+    private void changeFavoriteIcon(ImageView productFavorite, FavoriteDAO favoriteDAO, String id) {
+        if(favoriteDAO.exists(id)){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                productFavorite.setImageDrawable(getDrawable(R.drawable.ic_favorite_match));
+            }else{
+                productFavorite.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_match));
+            }
+        }else{
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                productFavorite.setImageDrawable(getDrawable(R.drawable.ic_favorite_normal));
+            }else{
+                productFavorite.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_normal));
+            }
         }
     }
 
