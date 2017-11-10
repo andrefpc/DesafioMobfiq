@@ -22,6 +22,7 @@
         <activity
             android:name=".controller.MainActivity"
             android:label="@string/title_activity_main"
+            android:configChanges="orientation|screenSize"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,7 +43,9 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".controller.DetailsActivity"></activity>
+        <activity
+            android:name=".controller.DetailsActivity"
+            android:configChanges="orientation|screenSize"></activity>
     </application>
 
 </manifest>
