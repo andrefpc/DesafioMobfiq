@@ -7,7 +7,7 @@
 
     <meta-data
         android:name="com.pushwoosh.appid"
-        android:value="FE44D-61013" />
+        android:value="BDE45-A80CC" />
     <meta-data
         android:name="com.pushwoosh.senderid"
         android:value="@string/fcm_sender_id" />
@@ -30,12 +30,19 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".service.MessagingService">
+        <service android:name=".service.MyFirebaseInstanceIdService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+
+        <service android:name=".service.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <activity android:name=".controller.DetailsActivity"></activity>
     </application>
 
 </manifest>

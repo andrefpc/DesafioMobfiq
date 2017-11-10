@@ -6,5 +6,8 @@
     <string name="title_categories">Categorias</string>
     <string name="hint_busca">Busca</string>
 
+
+    <string name="title_dialog">Chave do celular para o Firebase</string>
+
     <string name="fcm_sender_id">829166829414</string>
 </resources>

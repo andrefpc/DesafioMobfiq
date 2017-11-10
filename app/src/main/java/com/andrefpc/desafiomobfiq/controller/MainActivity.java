@@ -1,13 +1,20 @@
 package com.andrefpc.desafiomobfiq.controller;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -27,13 +34,15 @@ import com.andrefpc.desafiomobfiq.model.Product;
 import com.andrefpc.desafiomobfiq.model.SearchCriteria;
 import com.andrefpc.desafiomobfiq.service.RestClient;
 import com.andrefpc.desafiomobfiq.service.ServicoRestFul;
+import com.andrefpc.desafiomobfiq.util.SharedPreferencesManager;
 import com.andrefpc.desafiomobfiq.util.ShowImageTask;
 import com.google.gson.Gson;
-import com.pushwoosh.Pushwoosh;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+
+import static android.content.ContentValues.TAG;
 
 public class MainActivity extends AppCompatActivity implements RestClient.OnPostExecuteListener {
 
@@ -68,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
 
     private int flag;
 
-
+    //Listener para pegar eventos de clique no itens de menu
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -76,13 +85,19 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
+
+                    //Exibe o container de produtos
                     showProducts();
                     return true;
                 case R.id.navigation_more:
+
+                    //Carrega mais 10 intens na lista quando clica no item do menu "Mais Produtos"
                     page++;
                     ServicoRestFul.loadingProducts(search.getText().toString(), searchCriteria, page, context, onPost);
                     return true;
                 case R.id.navigation_categories:
+
+                    //Faz o download de categorias e exibe o container correspondente
                     showCategories();
 
                     if(categories == null) {
@@ -108,7 +123,9 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Pushwoosh.getInstance().registerForPushNotifications();
+
+        //Tentei implementar o Pushwoosh, entretanto o console exibe o erro "java.lang.IllegalArgumentException: Please set the mAppId constant and recompile the app.", sendo que está setado.
+        //Pushwoosh.getInstance().registerForPushNotifications();
 
         navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -119,7 +136,10 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         layoutProducts = (LinearLayout) findViewById(R.id.layoutProducts);
         categoryIdentifier = (LinearLayout) findViewById(R.id.category_identifier);
         categorySelected = (TextView) findViewById(R.id.category_selected) ;
+        layoutCategories = (ScrollView) findViewById(R.id.layoutCategories);
+        containerCategories = (LinearLayout) findViewById(R.id.containerCategories);
 
+        //Pega o evento de clique do botão de busca
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,25 +153,26 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
             }
         });
 
-
+        //Carrega a lista de produtos quando a aplicação abre
         page = 0;
         ServicoRestFul.loadingProducts("", searchCriteria, page, context, onPost);
         flag = LOADING_PRODUCTS;
 
-        layoutCategories = (ScrollView) findViewById(R.id.layoutCategories);
-        containerCategories = (LinearLayout) findViewById(R.id.containerCategories);
     }
 
 
-
+    //Método para pegar o callback das requisições feitas usando a class RestClient que administra as conexões
     @Override
     public void onPostExecute(String result) {
+        //Verifica se o callback veio do download de produtos
         if(flag == LOADING_PRODUCTS) {
 
             criteria = new Gson().fromJson(result, Criteria.class);
             products = criteria.getProducts();
 
             loadingProductsLine(products);
+
+        //Verifica se o callback veio do download de categorias
         }else if(flag == LOADING_CATEGORIES){
             CategoryTree categoryTree = new Gson().fromJson(result, CategoryTree.class);
             categories = categoryTree.getCategories();
@@ -161,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
 
     }
 
+    //Método para carregar as linhas da tabela de produtos
     private void loadingProductsLine(List<Product> products){
 
         int size = products.size();
@@ -174,33 +196,61 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
             View lineView = inflaterLine.inflate(R.layout.template_line, null);
             LinearLayout lineContainer = (LinearLayout) lineView.findViewById(R.id.lineContainer);
 
-            ImageView productImgLeft = (ImageView) lineContainer.findViewById(R.id.product_img1);
-            ProgressBar progressBarLeft = (ProgressBar) lineContainer.findViewById(R.id.progress_bar1);
-            TextView productNameLeft = (TextView) lineContainer.findViewById(R.id.product_full_name1);
-            TextView productListPriceLeft = (TextView) lineContainer.findViewById(R.id.product_listPrice1);
-            TextView productPriceLeft = (TextView) lineContainer.findViewById(R.id.product_price1);
-            TextView productInstallmentLeft = (TextView) lineContainer.findViewById(R.id.product_installment1);
-            TextView productDiscountLeft = (TextView) lineContainer.findViewById(R.id.product_discount1);
-            ImageView productFavoriteLeft = (ImageView) lineContainer.findViewById(R.id.product_favorite1);
+            //Inicializa as views do item da esquerda da linha correspondente
+
+            LinearLayout layoutLeft = (LinearLayout) lineContainer.findViewById(R.id.layout_left);
+            ImageView productImgLeft = (ImageView) lineContainer.findViewById(R.id.product_img_left);
+            ProgressBar progressBarLeft = (ProgressBar) lineContainer.findViewById(R.id.progress_bar_left);
+            TextView productNameLeft = (TextView) lineContainer.findViewById(R.id.product_full_name_left);
+            TextView productListPriceLeft = (TextView) lineContainer.findViewById(R.id.product_listPrice_left);
+            TextView productPriceLeft = (TextView) lineContainer.findViewById(R.id.product_price_left);
+            TextView productInstallmentLeft = (TextView) lineContainer.findViewById(R.id.product_installment_left);
+            TextView productDiscountLeft = (TextView) lineContainer.findViewById(R.id.product_discount_left);
+            ImageView productFavoriteLeft = (ImageView) lineContainer.findViewById(R.id.product_favorite_left);
 
             loadingProduct(productLeft, productImgLeft, progressBarLeft, productNameLeft, productListPriceLeft, productPriceLeft, productInstallmentLeft, productDiscountLeft, productFavoriteLeft);
 
-            ImageView productImgRight = (ImageView) lineContainer.findViewById(R.id.product_img2);
-            ProgressBar progressBarRight = (ProgressBar) lineContainer.findViewById(R.id.progress_bar2);
-            TextView productNameRight = (TextView) lineContainer.findViewById(R.id.product_full_name2);
-            TextView productListPriceRight = (TextView) lineContainer.findViewById(R.id.product_listPrice2);
-            TextView productPriceRight = (TextView) lineContainer.findViewById(R.id.product_price2);
-            TextView productInstallmentRight = (TextView) lineContainer.findViewById(R.id.product_installment2);
-            TextView productDiscountRight = (TextView) lineContainer.findViewById(R.id.product_discount2);
-            ImageView productFavoriteRight = (ImageView) lineContainer.findViewById(R.id.product_favorite2);
+            //Abre o detalhamento da produto da esquerda
+            layoutLeft.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+                    intent.putExtra("product", productLeft);
+                    startActivity(intent);
+                }
+            });
+
+            //Inicializa as views do item da direita da linha correspondente
+
+            LinearLayout layoutRight = (LinearLayout) lineContainer.findViewById(R.id.layout_right);
+            ImageView productImgRight = (ImageView) lineContainer.findViewById(R.id.product_img_right);
+            ProgressBar progressBarRight = (ProgressBar) lineContainer.findViewById(R.id.progress_bar_right);
+            TextView productNameRight = (TextView) lineContainer.findViewById(R.id.product_full_name_right);
+            TextView productListPriceRight = (TextView) lineContainer.findViewById(R.id.product_listPrice_right);
+            TextView productPriceRight = (TextView) lineContainer.findViewById(R.id.product_price_right);
+            TextView productInstallmentRight = (TextView) lineContainer.findViewById(R.id.product_installment_right);
+            TextView productDiscountRight = (TextView) lineContainer.findViewById(R.id.product_discount_right);
+            ImageView productFavoriteRight = (ImageView) lineContainer.findViewById(R.id.product_favorite_right);
 
             loadingProduct(productRight, productImgRight, progressBarRight, productNameRight, productListPriceRight, productPriceRight, productInstallmentRight, productDiscountRight, productFavoriteRight);
 
+            //Abre o detalhamento da produto da direita
+            layoutRight.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+                    intent.putExtra("product", productRight);
+                    startActivity(intent);
+                }
+            });
+
+            //Adiciona a linha no container dos produtos
             containerProducts.addView(lineContainer);
 
         }
     }
 
+    //Método para carregar as o item da linha da tabela de produtos
     private void loadingProduct(Product product, ImageView productImg, ProgressBar progressBar, TextView productName, TextView productListPrice, TextView productPrice, TextView productInstallment, TextView productDiscount, final ImageView productFavorite) {
 
         FavoriteDAO favoriteDAO = new FavoriteDAO(context);
@@ -266,6 +316,8 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         productListPrice.setPaintFlags(productListPrice.getPaintFlags() |   Paint.STRIKE_THRU_TEXT_FLAG);
     }
 
+
+    //Método para alterar o ícone de favoritos consultando se o id do produto está salvo no banco Sqlite da aplicação.
     private void changeFavoriteIcon(ImageView productFavorite, FavoriteDAO favoriteDAO, String id) {
         if(favoriteDAO.exists(id)){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -282,6 +334,7 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         }
     }
 
+    //Método para carregar as categorias para montar a árvore
     private void loadingCategories(List<Category> categories){
         for (final Category category: categories) {
 
@@ -370,15 +423,64 @@ public class MainActivity extends AppCompatActivity implements RestClient.OnPost
         }
     }
 
+    //Método para exibir o container de produtos ao clicar no item "Home" do menu
     private void showProducts(){
         layoutProducts.setVisibility(View.VISIBLE);
         layoutCategories.setVisibility(View.GONE);
 
     }
 
+    //Método para exibir o container de categorias ao clicar no item "Categorias" do menu
     private void showCategories(){
         search.setText("");
         layoutProducts.setVisibility(View.GONE);
         layoutCategories.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //Abre dialog com instruções para testar o Firebade Cloud Message
+        if (id == R.id.firebase_key) {
+
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this);
+            LayoutInflater inflater = getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.template_dialog_firebase, null);
+            dialogBuilder.setView(dialogView);
+
+            final AlertDialog alertDialog = dialogBuilder.create();
+
+            final EditText key = (EditText) dialogView.findViewById(R.id.key);
+            final TextView link = (TextView) dialogView.findViewById(R.id.link);
+
+            key.setText(SharedPreferencesManager.getKey(context));
+
+            link.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    String urlStr = link.getText().toString();
+                    String keyStr = key.getText().toString();
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(urlStr + "index.php?key=" + keyStr));
+                    startActivity(i);
+                }
+            });
+
+            alertDialog.show();
+
+
+            Log.d("KEY", "Key: " + SharedPreferencesManager.getKey(context));
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
