@@ -1,4 +1,4 @@
-package com.andrefpc.desafiomobfiq.service;
+package com.andrefpc.desafiomobfiq.model;
 
 import java.io.Serializable;
 
